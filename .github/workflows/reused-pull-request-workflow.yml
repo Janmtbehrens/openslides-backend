@@ -1,0 +1,18 @@
+on:
+  pull_request_target:
+    types:
+      - closed
+      - opened
+      - reopened
+      - review_requested
+
+jobs:
+  project-automation-calls:
+    uses: Janmtbehrens/OpenSlides/.github/workflows/reusable-pull_request-workflow.yml@reusable-github-actions
+    with:
+      action_type: ${{ github.event.action }}
+      pull_request_merged: ${{ github.event.pull_request.merged }}
+      pull_request_label: ${{ github.event.pull_request.labels.*.name }}
+      pull_request_node: ${{ github.event.pull_request.node_id }}
+    runs-on: ubuntu-latest
+    secrets: inherit

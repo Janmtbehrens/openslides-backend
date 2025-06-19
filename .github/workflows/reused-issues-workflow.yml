@@ -1,0 +1,14 @@
+on:
+  issues:
+    types:
+      - closed
+      - opened
+      - reopened
+
+jobs:
+  project-automation-calls:
+    uses: Janmtbehrens/OpenSlides/.github/workflows/reusable-issue-workflow.yml@reusable-github-actions
+    with:
+      action_type: ${{ github.event.action }}
+    runs-on: ubuntu-latest
+    secrets: inherit
