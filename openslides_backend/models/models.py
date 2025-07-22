@@ -106,6 +106,7 @@ class User(Model):
     last_email_sent = fields.TimestampField()
     is_demo_user = fields.BooleanField()
     last_login = fields.TimestampField(read_only=True)
+    external = fields.BooleanField()
     gender_id = fields.RelationField(to={"gender": "user_ids"})
     organization_management_level = fields.CharField(
         constraints={
@@ -130,6 +131,7 @@ class User(Model):
     vote_ids = fields.RelationListField(to={"vote": "user_id"})
     delegated_vote_ids = fields.RelationListField(to={"vote": "delegated_user_id"})
     poll_candidate_ids = fields.RelationListField(to={"poll_candidate": "user_id"})
+    home_committee_id = fields.RelationField(to={"committee": "native_user_ids"})
     meeting_ids = fields.NumberArrayField(
         read_only=True,
         constraints={
@@ -308,6 +310,11 @@ class Committee(Model):
         constraints={"description": "Calculated field."},
     )
     manager_ids = fields.RelationListField(to={"user": "committee_management_ids"})
+    parent_id = fields.RelationField(to={"committee": "child_ids"})
+    child_ids = fields.RelationListField(to={"committee": "parent_id"})
+    all_parent_ids = fields.RelationListField(to={"committee": "all_child_ids"})
+    all_child_ids = fields.RelationListField(to={"committee": "all_parent_ids"})
+    native_user_ids = fields.RelationListField(to={"user": "home_committee_id"})
     forward_to_committee_ids = fields.RelationListField(
         to={"committee": "receive_forwardings_from_committee_ids"}
     )
@@ -667,6 +674,12 @@ class Meeting(Model, MeetingModelMixin):
     )
     poll_default_backend = fields.CharField(
         default="fast", constraints={"enum": ["long", "fast"]}
+    )
+    poll_default_live_voting_enabled = fields.BooleanField(
+        default=False,
+        constraints={
+            "description": "Defines default 'poll.live_voting_enabled' option suggested to user. Is not used in the validations."
+        },
     )
     poll_couple_countdown = fields.BooleanField(default=True)
     topic_poll_default_group_ids = fields.RelationListField(
@@ -1879,6 +1892,12 @@ class Poll(Model, PollModelMixin):
     votesinvalid = fields.DecimalField()
     votescast = fields.DecimalField()
     entitled_users_at_stop = fields.JSONField()
+    live_voting_enabled = fields.BooleanField(
+        default=False,
+        constraints={
+            "description": "If true, the vote service sends the votes of the users to the autoupdate service."
+        },
+    )
     sequential_number = fields.IntegerField(
         required=True,
         read_only=True,

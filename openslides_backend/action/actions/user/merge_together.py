@@ -93,6 +93,8 @@ class UserMergeTogether(
                     "gender_id",
                     "email",
                     "default_vote_weight",
+                    "external",
+                    "home_committee_id",
                 ],
                 "error": [
                     "is_demo_user",

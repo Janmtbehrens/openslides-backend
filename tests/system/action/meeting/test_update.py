@@ -382,6 +382,13 @@ class MeetingUpdateActionTest(BaseActionTestCase):
             },
         )
 
+    def test_update_poll_default_live_voting_enabled(self) -> None:
+        self.basic_test({"poll_default_live_voting_enabled": True})
+        self.assert_model_exists(
+            "meeting/1",
+            {"poll_default_live_voting_enabled": True},
+        )
+
     def test_update_motions_block_slide_columns(self) -> None:
         self.basic_test(
             {
@@ -415,14 +422,12 @@ class MeetingUpdateActionTest(BaseActionTestCase):
         )
 
     def test_update_only_one_time_one_removal_from_db(self) -> None:
+        self.create_meeting()
         self.set_models(
             {
                 "meeting/1": {
-                    "name": "test_name",
-                    "is_active_in_organization_id": 1,
                     "start_time": 160000,
                     "end_time": 170000,
-                    "language": "en",
                 },
             }
         )
