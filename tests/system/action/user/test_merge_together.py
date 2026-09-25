@@ -1996,16 +1996,16 @@ class UserMergeTogether(BaseVoteTestCase):
                 if point_of_order is not None:
                     speaker_data["point_of_order"] = point_of_order
                 if point_of_order_category_id:
-                    speaker_data["point_of_order_category_id"] = (
-                        point_of_order_category_id
-                    )
+                    speaker_data[
+                        "point_of_order_category_id"
+                    ] = point_of_order_category_id
                 if structure_level_id:
                     structure_level_list_of_speakers_id = base_id * 2 - (
                         structure_level_id % 2
                     )
-                    speaker_data["structure_level_list_of_speakers_id"] = (
-                        structure_level_list_of_speakers_id
-                    )
+                    speaker_data[
+                        "structure_level_list_of_speakers_id"
+                    ] = structure_level_list_of_speakers_id
                 data[f"speaker/{next_speaker_id}"] = speaker_data
                 next_speaker_id += 1
             return next_speaker_id

@@ -97,9 +97,9 @@ class CommitteeUpdateAction(CommitteeCommonCreateUpdateMixin, UpdateAction):
                             ]
                         )["committee"]
                     )
-                relevant_tree: dict[int, tuple[int | None, list[int]]] = (
-                    {}
-                )  # id -> parent_id, child_ids
+                relevant_tree: dict[
+                    int, tuple[int | None, list[int]]
+                ] = {}  # id -> parent_id, child_ids
                 for id_, db_inst in db_instances.items():
                     if (inst := instances.get(id_)) and "parent_id" in inst:
                         relevant_tree[id_] = (inst["parent_id"], [])

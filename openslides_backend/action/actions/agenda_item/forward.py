@@ -284,16 +284,19 @@ class AgendaItemForward(SingularActionMixin, UpdateAction):
 
         Yields a { "id": <agenda_item_id> } dict for every thus-created agenda_item
         """
-        muser_matches, group_matches, structure_level_matches, pooc_matches = (
-            self.create_and_update_non_mediafile_meeting_models(
-                target_meeting_id,
-                target_meeting,
-                origin_musers,
-                origin_groups,
-                origin_structure_levels,
-                origin_poocs,
-                origin_sllos,
-            )
+        (
+            muser_matches,
+            group_matches,
+            structure_level_matches,
+            pooc_matches,
+        ) = self.create_and_update_non_mediafile_meeting_models(
+            target_meeting_id,
+            target_meeting,
+            origin_musers,
+            origin_groups,
+            origin_structure_levels,
+            origin_poocs,
+            origin_sllos,
         )
         mediafile_matches = self.create_mediafile_meeting_models(
             target_meeting_id, origin_mediafiles, target_meeting
@@ -656,9 +659,9 @@ class AgendaItemForward(SingularActionMixin, UpdateAction):
         - a list with dicts of the data of the speakers
         - a list with TreeNodes representing the children of the item.
         """
-        child_id_to_parent_id: dict[int, int | None] = (
-            self.calculate_reduced_parentage_dict(data["agenda_item"])
-        )
+        child_id_to_parent_id: dict[
+            int, int | None
+        ] = self.calculate_reduced_parentage_dict(data["agenda_item"])
 
         tree_list: list[TreeNode] = []
         id_to_node: dict[int, TreeNode] = {}
@@ -1220,12 +1223,13 @@ class AgendaItemForward(SingularActionMixin, UpdateAction):
         unmatched_meeting_users = {
             id_: origin_musers[id_] for id_ in unmatched_muser_ids
         }
-        structure_level_matches, unmatched_structure_level_ids = (
-            self.match_by_field_content(
-                "name",
-                origin_structure_levels,
-                target_meeting_structure_levels,
-            )
+        (
+            structure_level_matches,
+            unmatched_structure_level_ids,
+        ) = self.match_by_field_content(
+            "name",
+            origin_structure_levels,
+            target_meeting_structure_levels,
         )
         relevant_structure_level_ids_set = {
             id_

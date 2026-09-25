@@ -1,4 +1,3 @@
-
 from ....models.models import User
 from ....shared.interfaces.event import Event, EventType
 from ....shared.interfaces.write_request import WriteRequest
@@ -19,38 +18,33 @@ class UserBlockSessionID(
     schema = DefaultSchema(User()).get_create_schema(optional_properties=[])
 
     def perform(self, action_data, user_id, **kwargs):
-        self.logger.warning("HERE")
         try:
             encoded_logout_token = action_data[0]["logout_token"].split(
                 "logout_token="
             )[1]
-        except e:
+        except Exception as e:
             self.logger.error(
-                f"Block Session ID: Malformed logout token request: {action_data}"
+                f"Block Session ID: Malformed logout token request: {action_data} {e}"
             )
             return
-        self.logger.warning(encoded_logout_token)
 
         # Validate logout token and extract session id
         session_id = self.auth.backchannel_logout(encoded_logout_token)
 
-        self.logger.warning(session_id)
-
         # Emit session id block via database signal
-        if session_id == None or session_id == "":
+        if session_id is None or session_id == "":
             self.logger.error(
                 "Block Session ID: Session ID not present in logout token"
             )
             return
 
         # Write session id to blocklist
-        self.logger.warning("Written")
         self.datastore.write(
             WriteRequest(
                 events=[
                     Event(
                         type=EventType.Create,
-                        collection=f"blocked_sessions",
+                        collection="blocked_sessions",
                         fields={
                             "session_id": str(session_id),
                         },

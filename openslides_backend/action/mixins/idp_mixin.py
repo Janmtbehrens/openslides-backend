@@ -74,10 +74,11 @@ class IDPMixin(Action):
                 fqid=f"user/{instance.get('id')}", mapped_fields=["idp_id"]
             )["idp_id"]
         except Exception as e:
+            self.logger.debug(f"No user found for {instance}: {e}")
             return ""
 
     def find_and_remove_similar_idp_users(self, user):
-        ## Finds IDP users that share the same identifying keys in IDP and deletes them
+        # Finds IDP users that share the same identifying keys in IDP and deletes them
         idp_admin_access_token = self._get_admin_key()
 
         try:
@@ -182,7 +183,7 @@ class IDPMixin(Action):
             self.find_and_remove_similar_idp_users(user)
 
             try:
-                ## Upload OS user to IDP
+                # Upload OS user to IDP
                 response = requests.post(
                     self.idp_admin_route + "users/new",
                     json={
@@ -216,7 +217,7 @@ class IDPMixin(Action):
                     raise ActionException(
                         f"A user named {username} already exists in IDP."
                     )
-                elif idp_id == None:
+                elif idp_id is None:
                     raise ActionException(
                         f"ID returned by IDP is empty. Response: {response.json()}"
                     )
@@ -230,7 +231,7 @@ class IDPMixin(Action):
                 f"Error creating user {username} in IDP: They already have an IDP ID"
             )
 
-        ## Write IDP ID in datastore
+        # Write IDP ID in datastore
         if user_is_instance:
             user["idp_id"] = idp_id
         else:
@@ -250,11 +251,11 @@ class IDPMixin(Action):
                         locked_fields={},
                     )
                 )
-            except:
+            except Exception as e:
                 self.logger.warning(
                     "TODO: Causes initial import issues as user table does not exist yet"
                 )
-                return
+                raise ActionException(f"Error deleting user: {e}")
 
     # Deletes the OIDC user belonging to the given os user.
     # Warning: This will not remove the idp_id from the os user in the database!
@@ -265,16 +266,16 @@ class IDPMixin(Action):
             idp_id = self.get_idp_id_from_datastore(instance)
 
         if idp_id is None or idp_id == "":
-            self.logger.error(f"Deleting IDP user couldn't be done: no IDP ID")
+            self.logger.error("Deleting IDP user couldn't be done: no IDP ID")
             return
 
         idp_admin_access_token = self._get_admin_key()
 
         try:
-            ## Logout user
+            # Logout user
             self.revoke_all_sessions_of_user(idp_id)
 
-            ## Delete OS user from IDP
+            # Delete OS user from IDP
             response = requests.delete(
                 self.idp_admin_route + "users/" + idp_id,
                 headers={
@@ -296,7 +297,7 @@ class IDPMixin(Action):
             idp_id = self.get_idp_id_from_datastore(instance)
 
         if idp_id is None or idp_id == "":
-            self.logger.error(f"Logout of IDP user couldn't be done: no IDP ID")
+            self.logger.error("Logout of IDP user couldn't be done: no IDP ID")
             return
 
         idp_admin_access_token = self._get_admin_key()
@@ -320,8 +321,8 @@ class IDPMixin(Action):
 
             json_response = response.json()
 
-            if not "sessions" in json_response:
-                logger.warning(f"No session has been found")
+            if "sessions" not in json_response:
+                logger.warning("No session has been found")
                 return
 
             for session in json_response["sessions"]:
@@ -350,13 +351,13 @@ class IDPMixin(Action):
 
         if idp_id is None or idp_id == "":
             self.logger.error(
-                f"Setting enable status of IDP user couldn't be done: no IDP ID"
+                "Setting enable status of IDP user couldn't be done: no IDP ID"
             )
             return
 
         if not isinstance(enabled, bool):
             self.logger.error(
-                f"Setting enable status of IDP user couldn't be done: enabled parameter not a bool"
+                "Setting enable status of IDP user couldn't be done: enabled parameter not a bool"
             )
             return
 
@@ -368,7 +369,7 @@ class IDPMixin(Action):
             else:
                 command = "reactivate"
 
-            ## Change enable status of IDP user
+            # Change enable status of IDP user
             response = requests.post(
                 self.idp_admin_route + "users/" + idp_id + "/" + command,
                 headers={
@@ -396,7 +397,7 @@ class IDPMixin(Action):
             idp_id = self.get_idp_id_from_datastore(instance)
 
         if not idp_id or idp_id == "":
-            raise ActionException(f"Resetting password couldn't be done: no IDP ID")
+            raise ActionException("Resetting password couldn't be done: no IDP ID")
 
         idp_admin_access_token = self._get_admin_key()
 
@@ -427,17 +428,17 @@ class IDPMixin(Action):
             idp_id = self.get_idp_id_from_datastore(instance)
 
         if idp_id is None or idp_id == "":
-            self.logger.error(f"Updating email of IDP user couldn't be done: no IDP ID")
+            self.logger.error("Updating email of IDP user couldn't be done: no IDP ID")
             return
 
         if email is None or email == "":
-            self.logger.error(f"Updating email of IDP user couldn't be done: no email")
+            self.logger.error("Updating email of IDP user couldn't be done: no email")
             return
 
         idp_admin_access_token = self._get_admin_key()
 
         try:
-            ## Change email of IDP user
+            # Change email of IDP user
             response = requests.patch(
                 self.idp_admin_route + "users/" + idp_id,
                 json={"human": {"email": {"email": email, "isVerified": True}}},
@@ -460,20 +461,20 @@ class IDPMixin(Action):
 
         if idp_id is None or idp_id == "":
             self.logger.error(
-                f"Updating username of IDP user couldn't be done: no IDP ID"
+                "Updating username of IDP user couldn't be done: no IDP ID"
             )
             return
 
         if username is None or username == "":
             self.logger.error(
-                f"Updating username of IDP user couldn't be done: no email"
+                "Updating username of IDP user couldn't be done: no email"
             )
             return
 
         idp_admin_access_token = self._get_admin_key()
 
         try:
-            ## Change username of IDP user
+            # Change username of IDP user
             response = requests.patch(
                 self.idp_admin_route + "users/" + idp_id,
                 json={"username": username, "human": {}},
@@ -498,7 +499,7 @@ class IDPMixin(Action):
             idp_id = self.get_idp_id_from_datastore(instance)
 
         if not idp_id or idp_id == "":
-            raise ActionException(f"Updating password couldn't be done: no IDP ID")
+            raise ActionException("Updating password couldn't be done: no IDP ID")
 
         # If password is encrypted, then it must be argon2 encrypted
         if is_encrypted and not password.startswith("$argon2"):
@@ -507,7 +508,7 @@ class IDPMixin(Action):
         idp_admin_access_token = self._get_admin_key()
 
         try:
-            ## Change password of IDP user
+            # Change password of IDP user
             jsonPayload = {
                 "human": {"password": {"hashedPassword": {"hash": f"{password}"}}}
             }
@@ -566,12 +567,12 @@ class IDPMixin(Action):
             idp_id = self.get_idp_id_from_datastore(instance)
 
         if not idp_id or idp_id == "":
-            raise ActionException(f"Changing password couldn't be done: no IDP ID")
+            raise ActionException("Changing password couldn't be done: no IDP ID")
 
         idp_admin_access_token = self._get_admin_key()
 
         try:
-            ## Change password of IDP user
+            # Change password of IDP user
             response = requests.patch(
                 self.idp_admin_route + "users/" + idp_id,
                 json={
@@ -595,7 +596,7 @@ class IDPMixin(Action):
                 error_response = response.json()["message"]
                 self.logger.warning(error_response)
                 if "COMMAND-3M0fs" in error_response:
-                    raise ActionException(f"Old password is not correct")
+                    raise ActionException("Old password is not correct")
 
                 self.idp_error(response)
         except Exception as e:

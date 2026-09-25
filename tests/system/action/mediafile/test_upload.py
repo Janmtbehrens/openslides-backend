@@ -370,7 +370,8 @@ l,m,n,"""
     def test_upload_json_detect_json(self) -> None:
         self.create_meeting(110)
         filename = "test.json"
-        raw_json_content = dedent("""
+        raw_json_content = dedent(
+            """
                 {
                     "bruh": ["this", "is"],
                     "like": "like",
@@ -378,7 +379,8 @@ l,m,n,"""
                     "actual": true,
                     "json": {"file": "maaaann"}
                 }
-                """).encode()
+                """
+        ).encode()
         json_content = base64.b64encode(raw_json_content).decode()
         response = self.request(
             "mediafile.upload",

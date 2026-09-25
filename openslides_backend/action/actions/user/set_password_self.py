@@ -30,7 +30,7 @@ class UserSetPasswordSelf(UpdateAction, CheckForArchivedMeetingMixin, IDPMixin):
 
         self.user_changes_password(instance, new_pw, old_pw)
 
-        ### TODO how do we adapt this
+        # TODO how do we adapt this
         # db_instance = self.datastore.get(
         #    fqid_from_collection_and_id(self.model.collection, self.user_id),
         #    ["password", "saml_id"],

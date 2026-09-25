@@ -39,27 +39,34 @@ class Database(Protocol):
     @abstractmethod
     def apply_changed_model(
         self, fqid: FullQualifiedId, instance: PartialModel, replace: bool = False
-    ) -> None: ...
+    ) -> None:
+        ...
 
     @abstractmethod
-    def apply_to_be_deleted(self, fqid: FullQualifiedId) -> None: ...
+    def apply_to_be_deleted(self, fqid: FullQualifiedId) -> None:
+        ...
 
     @abstractmethod
-    def apply_to_be_deleted_for_protected(self, fqid: FullQualifiedId) -> None: ...
+    def apply_to_be_deleted_for_protected(self, fqid: FullQualifiedId) -> None:
+        ...
 
     @abstractmethod
     def get_changed_model(
         self, collection_or_fqid: str, id_: Id | None = None
-    ) -> PartialModel: ...
+    ) -> PartialModel:
+        ...
 
     @abstractmethod
-    def get_changed_models(self, collection: str) -> dict[Id, PartialModel]: ...
+    def get_changed_models(self, collection: str) -> dict[Id, PartialModel]:
+        ...
 
     @abstractmethod
-    def is_to_be_deleted(self, fqid: FullQualifiedId) -> bool: ...
+    def is_to_be_deleted(self, fqid: FullQualifiedId) -> bool:
+        ...
 
     @abstractmethod
-    def is_to_be_deleted_for_protected(self, fqid: FullQualifiedId) -> bool: ...
+    def is_to_be_deleted_for_protected(self, fqid: FullQualifiedId) -> bool:
+        ...
 
     @abstractmethod
     def get(
@@ -69,7 +76,8 @@ class Database(Protocol):
         lock_result: LockResult = True,
         use_changed_models: bool = True,
         raise_exception: bool = True,
-    ) -> PartialModel: ...
+    ) -> PartialModel:
+        ...
 
     @abstractmethod
     def get_many(
@@ -77,7 +85,8 @@ class Database(Protocol):
         get_many_requests: list[GetManyRequest],
         lock_result: LockResult = True,
         use_changed_models: bool = True,
-    ) -> dict[Collection, dict[int, PartialModel]]: ...
+    ) -> dict[Collection, dict[int, PartialModel]]:
+        ...
 
     @abstractmethod
     def get_all(
@@ -85,7 +94,8 @@ class Database(Protocol):
         collection: Collection,
         mapped_fields: list[str],
         lock_result: bool = True,
-    ) -> dict[int, PartialModel]: ...
+    ) -> dict[int, PartialModel]:
+        ...
 
     @abstractmethod
     def filter(
@@ -95,7 +105,8 @@ class Database(Protocol):
         mapped_fields: list[str],
         lock_result: bool = True,
         use_changed_models: bool = True,
-    ) -> dict[int, PartialModel]: ...
+    ) -> dict[int, PartialModel]:
+        ...
 
     @abstractmethod
     def exists(
@@ -104,7 +115,8 @@ class Database(Protocol):
         filter_: Filter | None,
         lock_result: bool = True,
         use_changed_models: bool = True,
-    ) -> bool: ...
+    ) -> bool:
+        ...
 
     @abstractmethod
     def count(
@@ -113,7 +125,8 @@ class Database(Protocol):
         filter_: Filter | None,
         lock_result: bool = True,
         use_changed_models: bool = True,
-    ) -> int: ...
+    ) -> int:
+        ...
 
     @abstractmethod
     def min(
@@ -123,7 +136,8 @@ class Database(Protocol):
         field: str,
         lock_result: bool = True,
         use_changed_models: bool = True,
-    ) -> int | None: ...
+    ) -> int | None:
+        ...
 
     @abstractmethod
     def max(
@@ -133,33 +147,42 @@ class Database(Protocol):
         field: str,
         lock_result: bool = True,
         use_changed_models: bool = True,
-    ) -> int | None: ...
+    ) -> int | None:
+        ...
 
     @abstractmethod
-    def reserve_ids(self, collection: Collection, amount: int) -> Sequence[int]: ...
+    def reserve_ids(self, collection: Collection, amount: int) -> Sequence[int]:
+        ...
 
     @abstractmethod
-    def reserve_id(self, collection: Collection) -> int: ...
+    def reserve_id(self, collection: Collection) -> int:
+        ...
 
     @abstractmethod
     def write(
         self, write_requests: list[WriteRequest] | WriteRequest
-    ) -> dict[FullQualifiedId, dict[str, Any]]: ...
+    ) -> dict[FullQualifiedId, dict[str, Any]]:
+        ...
 
     @abstractmethod
-    def truncate_db(self) -> None: ...
+    def truncate_db(self) -> None:
+        ...
 
     @abstractmethod
-    def is_deleted(self, fqid: FullQualifiedId) -> bool: ...
+    def is_deleted(self, fqid: FullQualifiedId) -> bool:
+        ...
 
     @abstractmethod
-    def is_new(self, fqid: FullQualifiedId) -> bool: ...
+    def is_new(self, fqid: FullQualifiedId) -> bool:
+        ...
 
     @abstractmethod
-    def reset(self, hard: bool = True) -> None: ...
+    def reset(self, hard: bool = True) -> None:
+        ...
 
     @abstractmethod
-    def get_everything(self) -> dict[Collection, dict[int, PartialModel]]: ...
+    def get_everything(self) -> dict[Collection, dict[int, PartialModel]]:
+        ...
 
     @abstractmethod
     def execute_custom_select(
@@ -167,4 +190,5 @@ class Database(Protocol):
         query: sql.Composed | sql.SQL,
         lock_result: LockResult = False,
         arguments: SqlArgumentsExtended = [],
-    ) -> list[PartialModel]: ...
+    ) -> list[PartialModel]:
+        ...

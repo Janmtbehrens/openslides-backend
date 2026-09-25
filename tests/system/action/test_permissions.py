@@ -71,9 +71,11 @@ class TestPermissions(PatchModelRegistryMixin, BaseActionTestCase):
     def tearDown(self) -> None:
         super().tearDown()
         with self.connection.cursor() as curs:
-            curs.execute(f"""
+            curs.execute(
+                f"""
                 TRUNCATE TABLE {collection_p}_t RESTART IDENTITY;
-                """)
+                """
+            )
 
     def test_anonymous_disabled(self) -> None:
         self.set_anonymous(False)

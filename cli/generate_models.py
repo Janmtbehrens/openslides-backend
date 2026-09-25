@@ -62,12 +62,14 @@ MODEL_MIXINS: dict[str, type] = {
     "poll": PollModelMixin,
 }
 
-FILE_TEMPLATE = dedent("""\
+FILE_TEMPLATE = dedent(
+    """\
     # Code generated. DO NOT EDIT.
 
     from . import fields
     from .base import Model
-    """)
+    """
+)
 
 
 def main() -> None:
@@ -130,11 +132,15 @@ class Model(Node):
     collection: str
     attributes: dict[str, "Attribute"]
 
-    MODEL_TEMPLATE = string.Template(dedent("""
+    MODEL_TEMPLATE = string.Template(
+        dedent(
+            """
             class ${class_name}(${base_classes}):
                 collection = "${collection}"
                 verbose_name = "${verbose_name}"
-            """))
+            """
+        )
+    )
 
     def __init__(self, collection: str, fields: dict[str, dict[str, Any]]) -> None:
         self.collection = collection
@@ -206,10 +212,12 @@ class Attribute(Node):
         else:
             self.type = value.get("type", "")
             if self.type in RELATION_FIELD_CLASSES.keys():
-                self.is_view_field, self.is_primary, self.write_fields = (
-                    self.get_view_field_state_write_fields(
-                        collection_name, field_name, value
-                    )
+                (
+                    self.is_view_field,
+                    self.is_primary,
+                    self.write_fields,
+                ) = self.get_view_field_state_write_fields(
+                    collection_name, field_name, value
                 )
                 self.to = To(value.pop("to"))
                 self.on_delete = value.pop("on_delete", None)

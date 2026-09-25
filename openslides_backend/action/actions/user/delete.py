@@ -7,7 +7,6 @@ from openslides_backend.shared.exceptions import ActionException
 from ....action.action import original_instances
 from ....action.util.typing import ActionData
 from ....models.models import User
-from ....shared.exceptions import ActionException
 from ....shared.filters import FilterOperator, Or
 from ....shared.mixins.user_scope_mixin import UserScopeMixin
 from ...generics.delete import DeleteAction

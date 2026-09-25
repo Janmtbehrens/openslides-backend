@@ -63,10 +63,10 @@ class ProjectorProject(WeightMixin, SingularActionMixin, UpdateAction):
                     )[0]["id"]
                 else:
                     meeting_mediafile_id = meeting_mediafile
-                fqid_content_object = instance["content_object_id"] = (
-                    fqid_from_collection_and_id(
-                        "meeting_mediafile", meeting_mediafile_id
-                    )
+                fqid_content_object = instance[
+                    "content_object_id"
+                ] = fqid_from_collection_and_id(
+                    "meeting_mediafile", meeting_mediafile_id
                 )
 
             self.move_equal_projections_to_history_or_unset(instance, meeting_id)

@@ -461,13 +461,13 @@ class BaseMotionCreateForwarded(
         if not self.datastore.get(
             ONE_ORGANIZATION_FQID, ["disable_forward_with_attachments"]
         ).get("disable_forward_with_attachments"):
-            motion_target_meeting_ids_map: dict[int, set[int]] = (
-                self._extract_motion_target_meeting_ids(action_data)
-            )
-            origin_attachments_data: dict[int, dict[str, Any]] = (
-                self._fetch_origin_attachments_data(
-                    list(motion_target_meeting_ids_map.keys())
-                )
+            motion_target_meeting_ids_map: dict[
+                int, set[int]
+            ] = self._extract_motion_target_meeting_ids(action_data)
+            origin_attachments_data: dict[
+                int, dict[str, Any]
+            ] = self._fetch_origin_attachments_data(
+                list(motion_target_meeting_ids_map.keys())
             )
             fetched_data = self._prepare_mediafiles_data(
                 motion_target_meeting_ids_map,

@@ -28,7 +28,6 @@ from ..shared.interfaces.services import Services
 
 
 class MigrationHandler(BaseHandler):
-
     def __init__(
         self,
         curs: Cursor[DictRow],
@@ -54,12 +53,16 @@ class MigrationHandler(BaseHandler):
 
         # TODO we might need finalization tables for future migrations to have active triggers on the table.
 
-        fields = self.cursor.execute(sql.SQL("""
+        fields = self.cursor.execute(
+            sql.SQL(
+                """
                 SELECT *
                 FROM information_schema.columns
                 WHERE table_schema = 'public'
                 AND table_name = {table};
-                """).format(table=table_name)).fetchall()
+                """
+            ).format(table=table_name)
+        ).fetchall()
         self.cursor.execute(
             sql.SQL(
                 "INSERT INTO {table_m} ({fields}) SELECT {fields} FROM {table_t};"
@@ -76,9 +79,10 @@ class MigrationHandler(BaseHandler):
 
     def setup_migration_relations(self) -> None:
         """Sets the tables and views used within the migration and copies their data."""
-        unified_replace_tables, _ = (
-            MigrationHelper.get_unified_replace_tables_from_database(self.cursor)
-        )
+        (
+            unified_replace_tables,
+            _,
+        ) = MigrationHelper.get_unified_replace_tables_from_database(self.cursor)
         im_tables = set()
         # COPY collection tables
         for collection, r_tables in unified_replace_tables.items():
@@ -94,7 +98,8 @@ class MigrationHandler(BaseHandler):
             r_tables["table"] for r_tables in unified_replace_tables.values()
         }:
             self.cursor.execute(
-                sql.SQL("""SELECT
+                sql.SQL(
+                    """SELECT
                         tc.constraint_name,
                         tc.is_deferrable,
                         tc.initially_deferred,
@@ -112,9 +117,8 @@ class MigrationHandler(BaseHandler):
                         ON rc.constraint_name = tc.constraint_name
                     WHERE tc.constraint_type = 'FOREIGN KEY'
                         AND tc.table_schema='public'
-                        AND tc.table_name='{table_name}';""").format(
-                    table_name=sql.SQL(table_name)
-                )
+                        AND tc.table_name='{table_name}';"""
+                ).format(table_name=sql.SQL(table_name))
             )
             results = self.cursor.fetchall()
 
@@ -252,9 +256,10 @@ class MigrationHandler(BaseHandler):
         """
         Updates all primary keys and sequential_number fields.
         """
-        unified_repl_tables, _ = (
-            MigrationHelper.get_unified_replace_tables_from_database(self.cursor)
-        )
+        (
+            unified_repl_tables,
+            _,
+        ) = MigrationHelper.get_unified_replace_tables_from_database(self.cursor)
         for collection in unified_repl_tables:
             table_name = HelperGetNames.get_table_name(collection)
             table = sql.Identifier(table_name)
@@ -450,9 +455,10 @@ class MigrationHandler(BaseHandler):
             )
             mig_class.cleanup(self.cursor)
 
-        unified_replace_tables, relevant_mis = (
-            MigrationHelper.get_unified_replace_tables_from_database(self.cursor)
-        )
+        (
+            unified_replace_tables,
+            relevant_mis,
+        ) = MigrationHelper.get_unified_replace_tables_from_database(self.cursor)
         for mi in relevant_mis:
             MigrationHelper.set_database_migration_info(
                 self.cursor, mi, MigrationState.FINALIZATION_RUNNING
@@ -537,16 +543,16 @@ class MigrationHandler(BaseHandler):
         )
         for collection_or_imt in im_tables | set(unified_replace_tables):
             to_drop_triggers = self.cursor.execute(
-                sql.SQL("""SELECT
+                sql.SQL(
+                    """SELECT
                         tgname AS trigger_name,
                         tgrelid::regclass AS table_name
                     FROM
                         pg_trigger
                     WHERE
                         tgrelid = {table_name}::regclass AND
-                        tgname NOT LIKE 'RI_ConstraintTrigger_%';""").format(
-                    table_name=HelperGetNames.get_table_name(collection_or_imt)
-                )
+                        tgname NOT LIKE 'RI_ConstraintTrigger_%';"""
+                ).format(table_name=HelperGetNames.get_table_name(collection_or_imt))
             ).fetchall()
             for trigger_dict in to_drop_triggers:
                 self.cursor.execute(

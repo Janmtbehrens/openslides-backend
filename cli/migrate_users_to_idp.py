@@ -100,7 +100,7 @@ def migrate_and_create_user(
 
         organisationId = response.json()["result"][0]["id"]
 
-        ## Upload OS user to IDP
+        # Upload OS user to IDP
         response = requests.post(
             idp_admin_route + "users/new",
             json={
@@ -233,27 +233,25 @@ def user_stress_test(users_to_add) -> None:
         username = "user-" + str(i)
         password = "fsafasf"
         email = "user-" + str(i) + "@email.com"
-        existing_idp_id = ""
         os_id = i
 
         idp_user_id = migrate_and_create_user(
-            idp_admin_key, username, os_id, email, password
+            get_admin_key(), username, os_id, email, password
         )
 
-        if idp_user_id == None:
+        if idp_user_id is None:
             raise Exception(f"Error migrating or finding user {username}")
 
 
 def main() -> None:
     conn = create_connection()
 
-    ## Get Admin Key
+    # Get Admin Key
     idp_admin_access_token = get_admin_key()
 
     user_idp_map = {}
-    ## Iterate all OS Users
+    # Iterate all OS Users
     with conn.cursor() as cursor:
-
         cursor.execute("SELECT username, password, email, idp_id, id FROM user_t;")
 
         for user in cursor:
@@ -263,20 +261,20 @@ def main() -> None:
             existing_idp_id = user[3]
             os_id = user[4]
 
-            if email == None:
+            if email is None:
                 email = f"{username}@missing-email.com"
 
             if existing_idp_id is None or existing_idp_id == "":
                 # No IDP ID set. This OS User likely has no IDP Account yet
                 logger.warning(f"Create new user {username}")
 
-                ## Upload OS user to IDP
+                # Upload OS user to IDP
                 idp_user_id = migrate_and_create_user(
                     idp_admin_access_token, username, os_id, email, password
                 )
 
                 logger.warning(f"ID: {idp_user_id}")
-                if idp_user_id == None:
+                if idp_user_id is None:
                     raise Exception(
                         f"Error migrating or finding user {username}. No ID"
                     )
@@ -296,7 +294,7 @@ def main() -> None:
                     )
 
                     logger.warning(f"ID: {idp_user_id}")
-                    if idp_user_id == None:
+                    if idp_user_id is None:
                         raise Exception(f"Error migrating or finding user {username}")
                 elif idp_username != username:
                     # IDP User exists, but is different from OS User
@@ -307,10 +305,10 @@ def main() -> None:
                     # IDP User exists and is the same as OS User
                     idp_user_id = existing_idp_id
 
-            ## Link username with idp id for later use
+            # Link username with idp id for later use
             user_idp_map[username] = idp_user_id
 
-    ## Record IDP ID to OS User
+    # Record IDP ID to OS User
     for username, idp_user_id in user_idp_map.items():
         with conn.cursor() as cursor:
             cursor.execute(
@@ -318,7 +316,7 @@ def main() -> None:
                 (idp_user_id, username),
             )
 
-    ## Commit user changes
+    # Commit user changes
     conn.commit()
 
 

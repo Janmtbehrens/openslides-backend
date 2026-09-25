@@ -26,10 +26,12 @@ class View(Protocol):
     """
 
     @abstractmethod
-    def __init__(self, logging: LoggingModule, services: Services) -> None: ...
+    def __init__(self, logging: LoggingModule, services: Services) -> None:
+        ...
 
     @abstractmethod
-    def dispatch(self, request: Request) -> RouteResponse: ...
+    def dispatch(self, request: Request) -> RouteResponse:
+        ...
 
 
 class WSGIApplication(Protocol):
@@ -41,11 +43,11 @@ class WSGIApplication(Protocol):
     env: Env
 
     @abstractmethod
-    def __init__(
-        self, logging: LoggingModule, view: View, services: Services
-    ) -> None: ...
+    def __init__(self, logging: LoggingModule, view: View, services: Services) -> None:
+        ...
 
     @abstractmethod
     def __call__(
         self, environ: WSGIEnvironment, start_response: StartResponse
-    ) -> Iterable[bytes]: ...
+    ) -> Iterable[bytes]:
+        ...

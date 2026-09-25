@@ -39,12 +39,13 @@ class ForwardMediafilesMixin(Action):
             new_mm_instances_data,
             mm_id_target_meeting_ids_map,
         ) = self.map_mediafiles_data(fetched_data)
-        duplicate_mediafiles_data, mediafile_replace_map_by_meeting = (
-            self._build_duplication_data_and_mediafile_replace_map(
-                mediafiles,
-                mediafile_new_mm_map_by_meeting,
-                mm_id_target_meeting_ids_map,
-            )
+        (
+            duplicate_mediafiles_data,
+            mediafile_replace_map_by_meeting,
+        ) = self._build_duplication_data_and_mediafile_replace_map(
+            mediafiles,
+            mediafile_new_mm_map_by_meeting,
+            mm_id_target_meeting_ids_map,
         )
         if duplicate_mediafiles_data:
             self.execute_other_action(
@@ -79,9 +80,9 @@ class ForwardMediafilesMixin(Action):
         meeting_mediafiles = fetched_data["meeting_mediafile"]
         mediafiles = fetched_data["mediafile"]
 
-        mediafile_new_mm_map_by_meeting: dict[int, dict[int, dict[str, Any]]] = (
-            defaultdict(dict)
-        )
+        mediafile_new_mm_map_by_meeting: dict[
+            int, dict[int, dict[str, Any]]
+        ] = defaultdict(dict)
         new_mm_instances_data: list[dict[str, Any]] = []
         mm_id_target_meeting_ids_map: dict[int, set[int]] = defaultdict(set)
 
