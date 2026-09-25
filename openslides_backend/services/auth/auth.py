@@ -1,30 +1,30 @@
-from urllib import parse
 
-import os
-import time
 import base64
-import requests
-import jwt
-from cryptography.hazmat.primitives.asymmetric.rsa import RSAPublicNumbers
-from argon2 import PasswordHasher
+import time
 from typing import Any
 
-from ...shared.filters import FilterOperator
+import jwt
+import requests
+from argon2 import PasswordHasher
+from cryptography.hazmat.primitives.asymmetric.rsa import RSAPublicNumbers
+
+from ...shared.env import Environment
 from ...shared.exceptions import AuthenticationException
 from ...shared.interfaces.logging import LoggingModule
-from ...shared.env import Environment
 from ..shared.authenticated_service import AuthenticatedService
 from .interface import AuthenticationService
 
+
 class IDPPayload:
     def __init__(self, claims: dict):
-        self.sub = claims.get("sub", "")                               # User ID
-        self.sid = claims.get("sid", "")                               # Session ID
-        self.os_id = claims.get("os_id", "")                           # OS User ID
-        self.preferred_username = claims.get("preferred_username", "") # User Name
-        self.azp = claims.get("azp", "")                               # Client name
-        self.exp = claims.get("exp", 0)                                # Expirery Date
-        self.iss = claims.get("iss", "")                               # Issuer URL
+        self.sub = claims.get("sub", "")  # User ID
+        self.sid = claims.get("sid", "")  # Session ID
+        self.os_id = claims.get("os_id", "")  # OS User ID
+        self.preferred_username = claims.get("preferred_username", "")  # User Name
+        self.azp = claims.get("azp", "")  # Client name
+        self.exp = claims.get("exp", 0)  # Expirery Date
+        self.iss = claims.get("iss", "")  # Issuer URL
+
 
 class AuthenticationOIDC(AuthenticationService, AuthenticatedService):
     """
@@ -58,10 +58,12 @@ class AuthenticationOIDC(AuthenticationService, AuthenticatedService):
         # Fetch JWT
         header_value = self.access_token
         if not header_value.startswith("Bearer: "):
-            raise AuthenticationException(f"Authorization does not contain 'Bearer:', instead {self.access_token}")
+            raise AuthenticationException(
+                f"Authorization does not contain 'Bearer:', instead {self.access_token}"
+            )
 
         # Convert JWT to Payload
-        payload = self._extract_payload(header_value[len("Bearer: "):])
+        payload = self._extract_payload(header_value[len("Bearer: ") :])
 
         if not payload or not payload.sub or not payload.os_id:
             return (0, "")
@@ -95,7 +97,9 @@ class AuthenticationOIDC(AuthenticationService, AuthenticatedService):
         payload = IDPPayload(claims)
 
         if payload.iss != self.issuer_url:
-            raise AuthenticationException(f"Invalid issuer: got {payload.iss}, want {self.issuer_url}")
+            raise AuthenticationException(
+                f"Invalid issuer: got {payload.iss}, want {self.issuer_url}"
+            )
 
         return payload
 
@@ -106,15 +110,21 @@ class AuthenticationOIDC(AuthenticationService, AuthenticatedService):
         backchannel_event_key = "http://schemas.openid.net/event/backchannel-logout"
         events = claims.get("events")
         if not isinstance(events, dict) or backchannel_event_key not in events:
-            raise AuthenticationException("Token is not a valid backchannel logout token (missing events)")
+            raise AuthenticationException(
+                "Token is not a valid backchannel logout token (missing events)"
+            )
 
         # Validate issuer
         if claims.get("iss") != self.issuer_url:
-            raise AuthenticationException(f"Invalid issuer: got {claims.get('iss')}, want {self.issuer_url}")
+            raise AuthenticationException(
+                f"Invalid issuer: got {claims.get('iss')}, want {self.issuer_url}"
+            )
 
         # Extract session ID
         if "sid" not in claims or not claims.get("sid"):
-            raise AuthenticationException(f"Logout token does not contain session ID \n {claims}")
+            raise AuthenticationException(
+                f"Logout token does not contain session ID \n {claims}"
+            )
 
         return claims["sid"]
 
@@ -152,7 +162,9 @@ class AuthenticationOIDC(AuthenticationService, AuthenticatedService):
     def _fetch_jwks(self, kid: str):
         url = f"{self.issuer_url_internal}/oauth/v2/keys"
         try:
-            resp = requests.get(url, headers={"Host": f"{self.externalHost.strip()}"}, timeout=10)
+            resp = requests.get(
+                url, headers={"Host": f"{self.externalHost.strip()}"}, timeout=10
+            )
         except requests.RequestException as e:
             raise AuthenticationException(f"Fetching JWKS: {e}")
 
@@ -182,7 +194,6 @@ class AuthenticationOIDC(AuthenticationService, AuthenticatedService):
 
         return RSAPublicNumbers(b64url_to_int(e_str), b64url_to_int(n_str)).public_key()
 
-
     def hash(self, toHash: str) -> str:
         return self.passwordHasher.hash(toHash)
 
@@ -200,9 +211,7 @@ class AuthenticationOIDC(AuthenticationService, AuthenticatedService):
         return session_id in self.blocked_session_ids
 
     def clear_all_sessions(self) -> None:
-        self.auth_handler.clear_all_sessions(
-            self.access_token
-        )
+        self.auth_handler.clear_all_sessions(self.access_token)
 
     def clear_sessions_by_user_id(self, user_id: int) -> None:
         self.auth_handler.clear_sessions_by_user_id(user_id)

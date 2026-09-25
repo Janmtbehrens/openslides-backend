@@ -178,6 +178,14 @@ class AssignmentCandidate(Model):
     )
 
 
+class BlockedSessions(Model):
+    collection = "blocked_sessions"
+    verbose_name = "blocked sessions"
+
+    id = fields.IntegerField(required=True, constant=True)
+    session_id = fields.CharField(required=True, constant=True)
+
+
 class ChatGroup(Model):
     collection = "chat_group"
     verbose_name = "chat group"
@@ -2897,10 +2905,7 @@ class User(Model):
     member_number = fields.CharField(unique=True)
     idp_id = fields.CharField(
         unique=True,
-        constraints={
-            "minLength": 1,
-            "description": "unique-key from IDP for OIDC login",
-        },
+        constraints={"minLength": 1, "description": "unique-key from IDP for login"},
     )
     saml_id = fields.CharField(
         unique=True,

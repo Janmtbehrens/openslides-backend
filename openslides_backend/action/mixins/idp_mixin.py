@@ -1,15 +1,17 @@
+import base64
 import logging
 import os
-import requests
-import json
-import base64
 
-from ..action import Action
+import requests
+
 from openslides_backend.shared.exceptions import ActionException
-from ...shared.interfaces.write_request import WriteRequest
+
 from ...shared.interfaces.event import Event, EventType
+from ...shared.interfaces.write_request import WriteRequest
+from ..action import Action
 
 logger = logging.getLogger(__name__)
+
 
 class IDPMixin(Action):
     """
@@ -19,8 +21,8 @@ class IDPMixin(Action):
     def get_config(key, default=""):
         return os.getenv(key, default)
 
-    admin_username="admin"
-    admin_password="admin"
+    admin_username = "admin"
+    admin_password = "admin"
 
     admin_token_path = "/zitadel/bootstrap/admin.pat"
     organization_id_path = "/zitadel/bootstrap/org-id"
@@ -48,7 +50,7 @@ class IDPMixin(Action):
         # Fetch key from admin file
         try:
             with open(self.admin_token_path) as file:
-                self._idp_admin_access_token = file.read().replace("\n","")
+                self._idp_admin_access_token = file.read().replace("\n", "")
                 return self._idp_admin_access_token
         except Exception as e:
             raise ActionException(f"Error reading admin pat file: {e}")
@@ -60,7 +62,7 @@ class IDPMixin(Action):
         # Fetch key from organization file
         try:
             with open(self.organization_id_path) as file:
-                self._idp_organisation_id = file.read().replace("\n","")
+                self._idp_organisation_id = file.read().replace("\n", "")
                 return self._idp_organisation_id
         except Exception as e:
             raise ActionException(f"Error reading organization id file: {e}")
@@ -69,12 +71,10 @@ class IDPMixin(Action):
     def get_idp_id_from_datastore(self, instance) -> str:
         try:
             return self.datastore.get(
-                fqid=f"user/{instance.get('id')}",
-                mapped_fields=["idp_id"]
-                )["idp_id"]
+                fqid=f"user/{instance.get('id')}", mapped_fields=["idp_id"]
+            )["idp_id"]
         except Exception as e:
             return ""
-
 
     def find_and_remove_similar_idp_users(self, user):
         ## Finds IDP users that share the same identifying keys in IDP and deletes them
@@ -129,24 +129,22 @@ class IDPMixin(Action):
             )
             """
 
-            response = requests.post(self.idp_admin_route + "users",
+            response = requests.post(
+                self.idp_admin_route + "users",
                 json={
-                    'queries': [
+                    "queries": [
                         {
-                            'userNameQuery': {
-                                'userName': user['username'],
+                            "userNameQuery": {
+                                "userName": user["username"],
                             }
                         },
                     ],
-                    "query": {
-                        "offset": 0,
-                        "limit": 100
-                    }
+                    "query": {"offset": 0, "limit": 100},
                 },
                 headers={
-                    'Authorization': f'Bearer {idp_admin_access_token}',
-                    'Host': f'{self.external_host}'
-                }
+                    "Authorization": f"Bearer {idp_admin_access_token}",
+                    "Host": f"{self.external_host}",
+                },
             )
 
             if response.status_code != 200:
@@ -154,11 +152,15 @@ class IDPMixin(Action):
 
             json_response = response.json()
 
-            if "result" not in json_response or "totalResult" not in json_response["details"] or int(json_response["details"]["totalResult"]) <= 0:
+            if (
+                "result" not in json_response
+                or "totalResult" not in json_response["details"]
+                or int(json_response["details"]["totalResult"]) <= 0
+            ):
                 # User does not exist
                 return
 
-            found_users = json_response['result']
+            found_users = json_response["result"]
 
             for user in found_users:
                 self.delete_user(user["userId"])
@@ -166,7 +168,7 @@ class IDPMixin(Action):
         except Exception as e:
             raise ActionException(f"Error finding user: {e}")
 
-    def create_user(self, user, password = "", user_is_instance = False):
+    def create_user(self, user, password="", user_is_instance=False):
         idp_admin_access_token = self._get_admin_key()
 
         os_id = user.get("id")
@@ -181,48 +183,52 @@ class IDPMixin(Action):
 
             try:
                 ## Upload OS user to IDP
-                response = requests.post(self.idp_admin_route + "users/new",
+                response = requests.post(
+                    self.idp_admin_route + "users/new",
                     json={
-                        'username': username,
-                        'organizationId': self._get_organisation_id(),
-                        'human': {
-                            'hashedPassword': {
-                                'hash': password
+                        "username": username,
+                        "organizationId": self._get_organisation_id(),
+                        "human": {
+                            "hashedPassword": {"hash": password},
+                            "profile": {
+                                "givenName": username,
+                                "familyName": username,
                             },
-                            'profile': {
-                                'givenName': username,
-                                'familyName': username,
-                            },
-                            'email': {
-                                'email': email,
-                                'isVerified': True
-                            }
+                            "email": {"email": email, "isVerified": True},
                         },
-                        'metadata': [
+                        "metadata": [
                             {
-                                'key': 'os_id',
-                                'value': base64.b64encode(str(os_id).encode("utf-8")).decode("ascii")
+                                "key": "os_id",
+                                "value": base64.b64encode(
+                                    str(os_id).encode("utf-8")
+                                ).decode("ascii"),
                             },
-                        ]
+                        ],
                     },
                     headers={
-                        'Authorization': f'Bearer {idp_admin_access_token}',
-                        'Host': f'{self.external_host}'
-                    }
+                        "Authorization": f"Bearer {idp_admin_access_token}",
+                        "Host": f"{self.external_host}",
+                    },
                 )
                 if response.status_code == 200:
                     idp_id = response.json()["id"]
                 elif response.status_code == 409:
-                    raise ActionException(f"A user named {username} already exists in IDP.")
+                    raise ActionException(
+                        f"A user named {username} already exists in IDP."
+                    )
                 elif idp_id == None:
-                    raise ActionException(f"ID returned by IDP is empty. Response: {response.json()}")
+                    raise ActionException(
+                        f"ID returned by IDP is empty. Response: {response.json()}"
+                    )
             except Exception as e:
                 raise ActionException(f"Error creating user: {e}")
 
         else:
             # A OIDC ID already exists.
             # TODO: Should this be an error? What's to do here?
-            raise ActionException(f"Error creating user {username} in IDP: They already have an IDP ID")
+            raise ActionException(
+                f"Error creating user {username} in IDP: They already have an IDP ID"
+            )
 
         ## Write IDP ID in datastore
         if user_is_instance:
@@ -245,7 +251,9 @@ class IDPMixin(Action):
                     )
                 )
             except:
-                self.logger.warning("TODO: Causes initial import issues as user table does not exist yet")
+                self.logger.warning(
+                    "TODO: Causes initial import issues as user table does not exist yet"
+                )
                 return
 
     # Deletes the OIDC user belonging to the given os user.
@@ -267,11 +275,12 @@ class IDPMixin(Action):
             self.revoke_all_sessions_of_user(idp_id)
 
             ## Delete OS user from IDP
-            response = requests.delete(self.idp_admin_route + "users/" + idp_id,
+            response = requests.delete(
+                self.idp_admin_route + "users/" + idp_id,
                 headers={
-                    'Authorization': f'Bearer {idp_admin_access_token}',
-                    'Host': f'{self.external_host}'
-                }
+                    "Authorization": f"Bearer {idp_admin_access_token}",
+                    "Host": f"{self.external_host}",
+                },
             )
 
             if response.status_code != 200:
@@ -293,25 +302,18 @@ class IDPMixin(Action):
         idp_admin_access_token = self._get_admin_key()
         self.logger.warning(f"Revoke sessions for {idp_id}")
         try:
-            response = requests.post(self.idp_admin_route + "sessions/search",
+            response = requests.post(
+                self.idp_admin_route + "sessions/search",
                 json={
-                    "query": {
-                        "offset": 0,
-                        "limit": 100,
-                        "asc": True
-                    },
+                    "query": {"offset": 0, "limit": 100, "asc": True},
                     "queries": [
-                        {
-                            "userIdQuery": {
-                                "id": f"{idp_id}"
-                            }
-                        },
+                        {"userIdQuery": {"id": f"{idp_id}"}},
                     ],
                 },
                 headers={
-                    'Authorization': f'Bearer {idp_admin_access_token}',
-                    'Host': f'{self.external_host}'
-                }
+                    "Authorization": f"Bearer {idp_admin_access_token}",
+                    "Host": f"{self.external_host}",
+                },
             )
             if response.status_code != 200:
                 self.idp_error(response)
@@ -324,12 +326,13 @@ class IDPMixin(Action):
 
             for session in json_response["sessions"]:
                 logger.warning(f"Removing Session: {session['id']}")
-                response = requests.delete(self.idp_admin_route + "sessions/" + session["id"],
+                response = requests.delete(
+                    self.idp_admin_route + "sessions/" + session["id"],
                     json={},
                     headers={
-                        'Authorization': f'Bearer {idp_admin_access_token}',
-                        'Host': f'{self.external_host}'
-                    }
+                        "Authorization": f"Bearer {idp_admin_access_token}",
+                        "Host": f"{self.external_host}",
+                    },
                 )
 
                 if response.status_code != 200:
@@ -346,11 +349,15 @@ class IDPMixin(Action):
             idp_id = self.get_idp_id_from_datastore(instance)
 
         if idp_id is None or idp_id == "":
-            self.logger.error(f"Setting enable status of IDP user couldn't be done: no IDP ID")
+            self.logger.error(
+                f"Setting enable status of IDP user couldn't be done: no IDP ID"
+            )
             return
 
         if not isinstance(enabled, bool):
-            self.logger.error(f"Setting enable status of IDP user couldn't be done: enabled parameter not a bool")
+            self.logger.error(
+                f"Setting enable status of IDP user couldn't be done: enabled parameter not a bool"
+            )
             return
 
         idp_admin_access_token = self._get_admin_key()
@@ -362,15 +369,18 @@ class IDPMixin(Action):
                 command = "reactivate"
 
             ## Change enable status of IDP user
-            response = requests.post(self.idp_admin_route + "users/" + idp_id + "/" + command,
+            response = requests.post(
+                self.idp_admin_route + "users/" + idp_id + "/" + command,
                 headers={
-                    'Authorization': f'Bearer {idp_admin_access_token}',
-                    'Host': f'{self.external_host}'
-                }
+                    "Authorization": f"Bearer {idp_admin_access_token}",
+                    "Host": f"{self.external_host}",
+                },
             )
             if response.status_code != 200:
                 if response.status_code == 400 and response.json()["code"] == 9:
-                    self.logger.warning("User was supposed to be activated/deactivated, but was already active/inactive in IDP")
+                    self.logger.warning(
+                        "User was supposed to be activated/deactivated, but was already active/inactive in IDP"
+                    )
                     return
 
                 self.idp_error(response)
@@ -391,11 +401,12 @@ class IDPMixin(Action):
         idp_admin_access_token = self._get_admin_key()
 
         try:
-            response = requests.post(self.idp_admin_route + "users/" + idp_id + "/password_reset",
+            response = requests.post(
+                self.idp_admin_route + "users/" + idp_id + "/password_reset",
                 headers={
-                    'Authorization': f'Bearer {idp_admin_access_token}',
-                    'Host': f'{self.external_host}'
-                }
+                    "Authorization": f"Bearer {idp_admin_access_token}",
+                    "Host": f"{self.external_host}",
+                },
             )
 
             if response.status_code != 200:
@@ -404,7 +415,9 @@ class IDPMixin(Action):
             # Logout user
             self.revoke_all_sessions_of_user(idp_id)
         except Exception as e:
-            raise ActionException(f"Error sending password reset email to user {idp_id}: {e}")
+            raise ActionException(
+                f"Error sending password reset email to user {idp_id}: {e}"
+            )
 
     # Updates email of user
     def update_email(self, instance, email):
@@ -425,19 +438,13 @@ class IDPMixin(Action):
 
         try:
             ## Change email of IDP user
-            response = requests.patch(self.idp_admin_route + "users/" + idp_id,
-                json={
-                    'human': {
-                        'email': {
-                            'email': email,
-                            'isVerified': True
-                        }
-                    }
-                },
+            response = requests.patch(
+                self.idp_admin_route + "users/" + idp_id,
+                json={"human": {"email": {"email": email, "isVerified": True}}},
                 headers={
-                    'Authorization': f'Bearer {idp_admin_access_token}',
-                    'Host': f'{self.external_host}'
-                }
+                    "Authorization": f"Bearer {idp_admin_access_token}",
+                    "Host": f"{self.external_host}",
+                },
             )
             if response.status_code != 200:
                 self.idp_error(response)
@@ -452,26 +459,28 @@ class IDPMixin(Action):
             idp_id = self.get_idp_id_from_datastore(instance)
 
         if idp_id is None or idp_id == "":
-            self.logger.error(f"Updating username of IDP user couldn't be done: no IDP ID")
+            self.logger.error(
+                f"Updating username of IDP user couldn't be done: no IDP ID"
+            )
             return
 
         if username is None or username == "":
-            self.logger.error(f"Updating username of IDP user couldn't be done: no email")
+            self.logger.error(
+                f"Updating username of IDP user couldn't be done: no email"
+            )
             return
 
         idp_admin_access_token = self._get_admin_key()
 
         try:
             ## Change username of IDP user
-            response = requests.patch(self.idp_admin_route + "users/" + idp_id,
-                json={
-                    'username': username,
-                    'human': { }
-                },
+            response = requests.patch(
+                self.idp_admin_route + "users/" + idp_id,
+                json={"username": username, "human": {}},
                 headers={
-                    'Authorization': f'Bearer {idp_admin_access_token}',
-                    'Host': f'{self.external_host}'
-                }
+                    "Authorization": f"Bearer {idp_admin_access_token}",
+                    "Host": f"{self.external_host}",
+                },
             )
             if response.status_code != 200:
                 self.idp_error(response)
@@ -480,7 +489,7 @@ class IDPMixin(Action):
 
     # This adds '=' for argon2 padding at the end of a password or salt. It needs to pad until the length of the string is divisible by 4
     def hash_padding(self, to_pad):
-        return to_pad + '=' * (-len(to_pad) % 4)
+        return to_pad + "=" * (-len(to_pad) % 4)
 
     def update_password(self, instance, password, is_encrypted):
         if isinstance(instance, str):
@@ -499,32 +508,21 @@ class IDPMixin(Action):
 
         try:
             ## Change password of IDP user
-            jsonPayload={
-                    'human': {
-                        'password': {
-                            'hashedPassword': {
-                                'hash': f'{password}'
-                            }
-                        }
-                    }
-                }
+            jsonPayload = {
+                "human": {"password": {"hashedPassword": {"hash": f"{password}"}}}
+            }
             if not is_encrypted:
-                jsonPayload={
-                    'human': {
-                        'password': {
-                            'password': {
-                                'password': f'{password}'
-                            }
-                        }
-                    }
+                jsonPayload = {
+                    "human": {"password": {"password": {"password": f"{password}"}}}
                 }
 
-            response = requests.patch(self.idp_admin_route + "users/" + idp_id,
+            response = requests.patch(
+                self.idp_admin_route + "users/" + idp_id,
                 json=jsonPayload,
                 headers={
-                    'Authorization': f'Bearer {idp_admin_access_token}',
-                    'Host': f'{self.external_host}'
-                }
+                    "Authorization": f"Bearer {idp_admin_access_token}",
+                    "Host": f"{self.external_host}",
+                },
             )
             """
             response = requests.put(self.idp_admin_route + "users/" + idp_id,
@@ -574,21 +572,20 @@ class IDPMixin(Action):
 
         try:
             ## Change password of IDP user
-            response = requests.patch(self.idp_admin_route + "users/" + idp_id,
+            response = requests.patch(
+                self.idp_admin_route + "users/" + idp_id,
                 json={
-                     'human': {
-                        'password': {
-                            'password': {
-                                'password': f'{newPassword}'
-                            },
-                            'currentPassword': f'{oldPassword}'
+                    "human": {
+                        "password": {
+                            "password": {"password": f"{newPassword}"},
+                            "currentPassword": f"{oldPassword}",
                         }
                     }
                 },
                 headers={
-                    'Authorization': f'Bearer {idp_admin_access_token}',
-                    'Host': f'{self.external_host}'
-                }
+                    "Authorization": f"Bearer {idp_admin_access_token}",
+                    "Host": f"{self.external_host}",
+                },
             )
 
             # Logout user

@@ -1,6 +1,6 @@
 import re
-from typing import Any
 from collections.abc import Callable
+from typing import Any
 
 from openslides_backend.permissions.permissions import Permissions
 from openslides_backend.shared.mixins.user_create_update_permissions_mixin import (
@@ -12,9 +12,9 @@ from ....shared.exceptions import ActionException
 from ....shared.schema import optional_id_schema
 from ....shared.util import ONE_ORGANIZATION_ID
 from ...generics.create import CreateAction
+from ...mixins.idp_mixin import IDPMixin
 from ...mixins.meeting_user_helper import get_meeting_user
 from ...mixins.send_email_mixin import EmailCheckMixin
-from ...mixins.idp_mixin import IDPMixin
 from ...util.crypto import get_random_password
 from ...util.default_schema import DefaultSchema
 from ...util.register import register_action
@@ -111,9 +111,13 @@ class UserCreate(
         def on_success() -> None:
             try:
                 # Create IDP account
-                self.create_user(action_data[0], self.auth.hash(get_random_password()), False)
+                self.create_user(
+                    action_data[0], self.auth.hash(get_random_password()), False
+                )
             except Exception as e:
-                self.logger.error(f"Couldn't create IDP user after OS user was created: {e}")
+                self.logger.error(
+                    f"Couldn't create IDP user after OS user was created: {e}"
+                )
 
         return on_success
 

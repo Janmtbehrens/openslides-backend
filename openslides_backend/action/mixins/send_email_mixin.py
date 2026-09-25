@@ -2,22 +2,21 @@ import os
 import re
 import smtplib
 import ssl
-from collections.abc import Generator
+from collections.abc import Callable, Generator
 from contextlib import contextmanager
 from datetime import datetime
 from email.message import EmailMessage
 from email.utils import format_datetime, make_msgid
-from .idp_mixin import IDPMixin
 from typing import Any
-from collections.abc import Callable
 
 from openslides_backend.shared.interfaces.logging import Logger
 
 from ...shared.env import is_truthy
 from ...shared.exceptions import ActionException
-from ..util.typing import ActionData
 from ...shared.html import get_text_from_html
 from ..action import Action
+from ..util.typing import ActionData
+from .idp_mixin import IDPMixin
 
 SendErrors = dict[str, tuple[int, bytes]]
 
@@ -201,9 +200,12 @@ class EmailCheckMixin(IDPMixin):
         def on_success() -> None:
             # Update email
             if "check_email_field" in action_data[0]:
-                self.update_email(action_data[0], action_data[0].get("check_email_field"))
+                self.update_email(
+                    action_data[0], action_data[0].get("check_email_field")
+                )
 
         return on_success
+
 
 class EmailSenderCheckMixin(Action):
     check_email_sender_field = "users_email_sender"
