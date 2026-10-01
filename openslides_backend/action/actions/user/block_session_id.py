@@ -5,7 +5,6 @@ from ...util.default_schema import DefaultSchema
 from ...util.register import register_action
 from .user_mixins import UserMixin
 
-
 @register_action("user.block_session_id")
 class UserBlockSessionID(
     UserMixin,
@@ -38,7 +37,7 @@ class UserBlockSessionID(
             )
             return
 
-        # Write session id to blocklist
+        # Write session id to database blocklist
         self.datastore.write(
             WriteRequest(
                 events=[
@@ -46,7 +45,7 @@ class UserBlockSessionID(
                         type=EventType.Create,
                         collection="blocked_sessions",
                         fields={
-                            "session_id": str(session_id),
+                            "session_id": str(session_id)
                         },
                     )
                 ]

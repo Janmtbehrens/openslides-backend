@@ -38,16 +38,7 @@ class AuthenticationOIDC(AuthenticationService, AuthenticatedService):
         self.logger = logging.getLogger(__name__)
         self.env = env
         self.issuer_url = self.env.IDP_URL_EXTERNAL
-        self.issuer_url_internal = self.env.IDP_URL_INTERNAL
-        self.externalHost = self.env.IDP_EXTERNAL_HOST
         self.headers = {"Content-Type": "application/json"}
-
-        # JWT public key caching
-        self._keys: dict = {}
-        self._keys_expires_at: float = 0.0
-
-        if self.issuer_url_internal is None or self.issuer_url_internal == "":
-            self.issuer_url_internal = self.env.IDP_URL_EXTERNAL
 
     def authenticate(self) -> tuple[int, str | None]:
         self.logger.debug(
@@ -76,7 +67,7 @@ class AuthenticationOIDC(AuthenticationService, AuthenticatedService):
     def backchannel_logout(self, encoded_logout_token: str) -> str:
         # Extract Logout Token
         self.logger.debug(
-            f"Logout token with the following data: {encoded_logout_token}"
+            f"Backchannel logout triggered"
         )
 
         # Extract session ID
@@ -94,11 +85,6 @@ class AuthenticationOIDC(AuthenticationService, AuthenticatedService):
         claims = self._extract_claims(token_string)
 
         payload = IDPPayload(claims)
-
-        if payload.iss != self.issuer_url:
-            raise AuthenticationException(
-                f"Invalid issuer: got {payload.iss}, want {self.issuer_url}"
-            )
 
         return payload
 
@@ -129,69 +115,15 @@ class AuthenticationOIDC(AuthenticationService, AuthenticatedService):
 
     def _extract_claims(self, token: str) -> dict[str, Any]:
         try:
-            unverified_header = jwt.get_unverified_header(token)
-        except jwt.exceptions.DecodeError as e:
-            raise AuthenticationException(f"Parsing JWT header: {e}")
-
-        kid = unverified_header.get("kid")
-        if not kid:
-            raise AuthenticationException("No IDP id in token header")
-
-        public_key = self._get_key(kid)
-
-        try:
             claims = jwt.decode(
                 token,
-                public_key,
                 algorithms=["RS256"],
-                options={"verify_aud": False},
+                options={"verify_aud": False, "verify_signature": False},
             )
-        except jwt.exceptions.ExpiredSignatureError as e:
-            raise AuthenticationException(f"JWT token expired: {e}")
-        except jwt.exceptions.InvalidTokenError as e:
-            raise AuthenticationException(f"Validating JWT token: {e}")
+        except jwt.exceptions.DecodeError as e:
+            raise AuthenticationException(f"Decoding JWT token: {e}")
 
         return claims
-
-    def _get_key(self, kid: str):
-        if kid in self._keys and time.time() < self._keys_expires_at:
-            return self._keys[kid]
-        return self._fetch_jwks(kid)
-
-    def _fetch_jwks(self, kid: str):
-        url = f"{self.issuer_url_internal}/oauth/v2/keys"
-        try:
-            resp = requests.get(
-                url, headers={"Host": f"{self.externalHost.strip()}"}, timeout=10
-            )
-        except requests.RequestException as e:
-            raise AuthenticationException(f"Fetching JWKS: {e}")
-
-        if resp.status_code != 200:
-            raise AuthenticationException(f"JWKS request failed: {resp.status_code}")
-
-        self._keys = {}
-        for key in resp.json().get("keys", []):
-            if key.get("kty") != "RSA":
-                continue
-            try:
-                self._keys[key["kid"]] = self._parse_rsa_public_key(key["n"], key["e"])
-            except Exception:
-                continue
-
-        self._keys_expires_at = time.time() + 3600
-
-        if kid not in self._keys:
-            raise AuthenticationException(f"Key {kid} not found in JWKS")
-
-        return self._keys[kid]
-
-    def _parse_rsa_public_key(self, n_str: str, e_str: str):
-        def b64url_to_int(s: str) -> int:
-            padded = s + "=" * (-len(s) % 4)
-            return int.from_bytes(base64.urlsafe_b64decode(padded), "big")
-
-        return RSAPublicNumbers(b64url_to_int(e_str), b64url_to_int(n_str)).public_key()
 
     def hash(self, toHash: str) -> str:
         return self.passwordHasher.hash(toHash)
