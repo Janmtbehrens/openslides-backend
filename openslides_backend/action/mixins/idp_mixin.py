@@ -21,9 +21,6 @@ class IDPMixin(Action):
     def get_config(key, default=""):
         return os.getenv(key, default)
 
-    admin_username = "admin"
-    admin_password = "admin"
-
     admin_token_path = "/zitadel/bootstrap/admin.pat"
     organization_id_path = "/zitadel/bootstrap/org-id"
 
@@ -43,7 +40,7 @@ class IDPMixin(Action):
     _idp_admin_access_token = ""
     _idp_organisation_id = ""
 
-    def _get_admin_key(self):
+    def _get_admin_key(self) -> str:
         if self._idp_admin_access_token != "":
             return self._idp_admin_access_token
 
@@ -55,7 +52,7 @@ class IDPMixin(Action):
         except Exception as e:
             raise ActionException(f"Error reading admin pat file: {e}")
 
-    def _get_organisation_id(self):
+    def _get_organisation_id(self) -> str:
         if self._idp_organisation_id != "":
             return self._idp_organisation_id
 
