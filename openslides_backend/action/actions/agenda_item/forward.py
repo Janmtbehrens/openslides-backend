@@ -659,9 +659,9 @@ class AgendaItemForward(SingularActionMixin, UpdateAction):
         - a list with dicts of the data of the speakers
         - a list with TreeNodes representing the children of the item.
         """
-        child_id_to_parent_id: dict[
-            int, int | None
-        ] = self.calculate_reduced_parentage_dict(data["agenda_item"])
+        child_id_to_parent_id: dict[int, int | None] = (
+            self.calculate_reduced_parentage_dict(data["agenda_item"])
+        )
 
         tree_list: list[TreeNode] = []
         id_to_node: dict[int, TreeNode] = {}

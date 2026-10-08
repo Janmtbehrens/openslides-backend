@@ -7,8 +7,10 @@ import requests
 
 logger = logging.getLogger(__name__)
 
+
 def get_config(key, default=""):
     return os.getenv(key, default)
+
 
 admin_token_path = "/zitadel/bootstrap/admin.pat"
 organization_id_path = "/zitadel/bootstrap/org-id"
@@ -25,6 +27,7 @@ idp_route = get_config("IDP_URL_INTERNAL", "http://zitadel-api:8080")
 
 idp_admin_route = f"{idp_route}/v2/"
 
+
 def create_connection():
     try:
         return psycopg.connect(
@@ -37,13 +40,17 @@ def create_connection():
     except psycopg.Error as e:
         raise Exception(f"Error during connect to the database: {e}")
 
+
 def create_session(token: str) -> requests.Session:
     session = requests.Session()
-    session.headers.update({
-        "Authorization": f"Bearer {token}",
-        "Host": external_host,
-    })
+    session.headers.update(
+        {
+            "Authorization": f"Bearer {token}",
+            "Host": external_host,
+        }
+    )
     return session
+
 
 # Returns access token of the REST API admin
 def get_admin_key() -> str:
@@ -55,6 +62,7 @@ def get_admin_key() -> str:
     except Exception as e:
         raise Exception(f"Error reading admin pat file: {e}")
 
+
 def get_organization_id() -> str:
     # Fetch key from organization file
     try:
@@ -64,12 +72,11 @@ def get_organization_id() -> str:
     except Exception as e:
         raise Exception(f"Error reading organization id file: {e}")
 
+
 # Returns IDP user data
 def get_name_of_idp_user(session, idp_id) -> str:
     try:
-        response = session.get(
-            idp_admin_route + "users/" + idp_id
-        )
+        response = session.get(idp_admin_route + "users/" + idp_id)
 
         if response.status_code == 404:
             return ""
@@ -120,11 +127,14 @@ def migrate_and_create_user(
         elif response.status_code == 409:
             raise Exception(f"A user named {username} already exists in IDP.")
         else:
-            raise Exception(f"ID returned by IDP is empty. Unexpected response: {response.text}")
+            raise Exception(
+                f"ID returned by IDP is empty. Unexpected response: {response.text}"
+            )
     except Exception as e:
         raise Exception(f"Error creating user: {e}")
 
     return idp_id
+
 
 def user_stress_test(users_to_add) -> None:
     # Get Admin Key
@@ -180,9 +190,7 @@ def main() -> None:
                         f"User {username} already exists with id {existing_idp_id}"
                     )
                     # An IDP ID already exists. Check if it points to the correct OS User
-                    idp_username = get_name_of_idp_user(
-                        session, existing_idp_id
-                    )
+                    idp_username = get_name_of_idp_user(session, existing_idp_id)
 
                     if idp_username == "":
                         # No user with that id exists at all, create new one
@@ -210,6 +218,7 @@ def main() -> None:
 
         # Commit user changes
         conn.commit()
+
 
 if __name__ == "__main__":
     main()

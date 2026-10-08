@@ -429,9 +429,7 @@ class AgendaItemForwardActionTest(BaseActionTestCase):
             data["mimetype"] = (
                 "text/plain"
                 if filetype == "txt"
-                else "image/png"
-                if filetype == "png"
-                else "application/png"
+                else "image/png" if filetype == "png" else "application/png"
             )
             if filetype == "pdf":
                 if for_writing:

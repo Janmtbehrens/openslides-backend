@@ -5,6 +5,7 @@ from ...util.default_schema import DefaultSchema
 from ...util.register import register_action
 from .user_mixins import UserMixin
 
+
 @register_action("user.block_session_id")
 class UserBlockSessionID(
     UserMixin,
@@ -44,9 +45,7 @@ class UserBlockSessionID(
                     Event(
                         type=EventType.Create,
                         collection="blocked_sessions",
-                        fields={
-                            "session_id": str(session_id)
-                        },
+                        fields={"session_id": str(session_id)},
                     )
                 ]
             )

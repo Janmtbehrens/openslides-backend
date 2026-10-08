@@ -80,9 +80,9 @@ class ForwardMediafilesMixin(Action):
         meeting_mediafiles = fetched_data["meeting_mediafile"]
         mediafiles = fetched_data["mediafile"]
 
-        mediafile_new_mm_map_by_meeting: dict[
-            int, dict[int, dict[str, Any]]
-        ] = defaultdict(dict)
+        mediafile_new_mm_map_by_meeting: dict[int, dict[int, dict[str, Any]]] = (
+            defaultdict(dict)
+        )
         new_mm_instances_data: list[dict[str, Any]] = []
         mm_id_target_meeting_ids_map: dict[int, set[int]] = defaultdict(set)
 

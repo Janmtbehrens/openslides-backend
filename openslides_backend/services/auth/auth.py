@@ -1,11 +1,7 @@
-import base64
-import time
 from typing import Any
 
 import jwt
-import requests
 from argon2 import PasswordHasher
-from cryptography.hazmat.primitives.asymmetric.rsa import RSAPublicNumbers
 
 from ...shared.env import Environment
 from ...shared.exceptions import AuthenticationException
@@ -66,9 +62,7 @@ class AuthenticationOIDC(AuthenticationService, AuthenticatedService):
 
     def backchannel_logout(self, encoded_logout_token: str) -> str:
         # Extract Logout Token
-        self.logger.debug(
-            f"Backchannel logout triggered"
-        )
+        self.logger.debug(f"Backchannel logout triggered")
 
         # Extract session ID
         try:

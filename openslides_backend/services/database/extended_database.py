@@ -252,9 +252,9 @@ class ExtendedDatabase(Database):
         use_changed_models: bool = True,
     ) -> dict[Collection, dict[int, PartialModel]]:
         if use_changed_models:
-            mapped_fields_per_collection_and_id: dict[
-                str, dict[int, Any]
-            ] = defaultdict(dict)
+            mapped_fields_per_collection_and_id: dict[str, dict[int, Any]] = (
+                defaultdict(dict)
+            )
             for request in get_many_requests:
                 if not request.mapped_fields:
                     raise DatabaseException("No mapped fields given.")

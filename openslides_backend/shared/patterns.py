@@ -71,8 +71,7 @@ def strip_reserved_fields(dictionary: dict[str, Any]) -> None:
 
 
 def transform_to_fqids(
-    value: None
-    | (
+    value: None | (
         int
         | str
         | FullQualifiedId
