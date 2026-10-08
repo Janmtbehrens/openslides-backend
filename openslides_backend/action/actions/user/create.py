@@ -12,7 +12,7 @@ from ....shared.exceptions import ActionException
 from ....shared.schema import optional_id_schema
 from ....shared.util import ONE_ORGANIZATION_ID
 from ...generics.create import CreateAction
-from ...mixins.idp_mixin import IDPMixin
+from ...mixins.idp_user_mixin import IDPUserMixin
 from ...mixins.meeting_user_helper import get_meeting_user
 from ...mixins.send_email_mixin import EmailCheckMixin
 from ...util.crypto import get_random_password
@@ -32,7 +32,7 @@ class UserCreate(
     LimitOfUserMixin,
     UsernameMixin,
     CheckLockOutPermissionMixin,
-    IDPMixin,
+    IDPUserMixin,
 ):
     """
     Action to create a user.

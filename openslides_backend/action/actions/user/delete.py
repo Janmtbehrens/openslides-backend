@@ -10,7 +10,7 @@ from ....models.models import User
 from ....shared.filters import FilterOperator, Or
 from ....shared.mixins.user_scope_mixin import UserScopeMixin
 from ...generics.delete import DeleteAction
-from ...mixins.idp_mixin import IDPMixin
+from ...mixins.idp_user_mixin import IDPUserMixin
 from ...util.default_schema import DefaultSchema
 from ...util.register import register_action
 from .user_mixins import AdminIntegrityCheckMixin
@@ -21,7 +21,7 @@ class UserDelete(
     UserScopeMixin,
     DeleteAction,
     AdminIntegrityCheckMixin,
-    IDPMixin,
+    IDPUserMixin,
 ):
     """
     Action to delete a user.

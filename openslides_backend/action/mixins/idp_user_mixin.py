@@ -15,9 +15,9 @@ from ..action import Action
 logger = logging.getLogger(__name__)
 
 
-class IDPMixin(Action):
+class IDPUserMixin(Action):
     """
-    Provides a mixin for an external Identity Provider
+    Provides a mixin for an external Identity Provider concerning user integration
     """
 
     admin_token_path = "/zitadel/bootstrap/admin.pat"
