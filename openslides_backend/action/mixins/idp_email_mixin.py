@@ -1,15 +1,11 @@
-import base64
 import logging
 import os
-from typing import Any
 
 import requests
 from requests import Response
 
 from openslides_backend.shared.exceptions import ActionException
 
-from ...shared.interfaces.event import Event, EventType
-from ...shared.interfaces.write_request import WriteRequest
 from ..action import Action
 
 logger = logging.getLogger(__name__)
@@ -19,6 +15,7 @@ class IDPEmailMixin(Action):
     """
     Provides a mixin for an external Identity Provider concerning email settings
     """
+
     admin_token_path = "/zitadel/bootstrap/admin.pat"
 
     external_host = os.getenv("IDP_EXTERNAL_HOST", "localhost:8800")
@@ -62,11 +59,10 @@ class IDPEmailMixin(Action):
 
             json_response = response.json()
 
-            if (
-                "config" not in json_response
-                or "id" not in json_response["config"]
-            ):
-                raise ActionException(f"Error fetching email provider id: No id config.id in response: {json_response}")
+            if "config" not in json_response or "id" not in json_response["config"]:
+                raise ActionException(
+                    f"Error fetching email provider id: No id config.id in response: {json_response}"
+                )
 
             return json_response["config"]["id"]
         except Exception as e:
@@ -77,9 +73,7 @@ class IDPEmailMixin(Action):
             # Change email sender
             response = requests.put(
                 self.idp_email_route + "smtp/" + self._get_email_provider(),
-                json={
-                    "senderAddress": f"{sender}"
-                },
+                json={"senderAddress": f"{sender}"},
                 headers={
                     "Authorization": f"Bearer {self._get_admin_key()}",
                     "Host": f"{self.external_host}",
@@ -96,9 +90,7 @@ class IDPEmailMixin(Action):
             # Change email reply address
             response = requests.put(
                 self.idp_email_route + "smtp/" + self._get_email_provider(),
-                json={
-                    "replyToAddress": f"{reply_address}"
-                },
+                json={"replyToAddress": f"{reply_address}"},
                 headers={
                     "Authorization": f"Bearer {self._get_admin_key()}",
                     "Host": f"{self.external_host}",
@@ -118,9 +110,7 @@ class IDPEmailMixin(Action):
             # Change email subject
             response = requests.put(
                 self.idp_message_route + "invite_user/" + language + "/",
-                json={
-                    "subject": f"{subject}"
-                },
+                json={"subject": f"{subject}"},
                 headers={
                     "Authorization": f"Bearer {self._get_admin_key()}",
                     "Host": f"{self.external_host}",
@@ -137,9 +127,7 @@ class IDPEmailMixin(Action):
             # Change email body
             response = requests.put(
                 self.idp_message_route + "invite_user/" + language + "/",
-                json={
-                    "text": f"{body}"
-                },
+                json={"text": f"{body}"},
                 headers={
                     "Authorization": f"Bearer {self._get_admin_key()}",
                     "Host": f"{self.external_host}",

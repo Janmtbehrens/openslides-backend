@@ -32,7 +32,7 @@ class UserBlockSessionID(
         session_id = self.auth.backchannel_logout(encoded_logout_token)
 
         # Emit session id block via database signal
-        if session_id is None or session_id == "":
+        if not session_id:
             self.logger.error(
                 "Block Session ID: Session ID not present in logout token"
             )

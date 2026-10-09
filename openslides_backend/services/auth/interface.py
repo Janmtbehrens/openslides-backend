@@ -22,7 +22,7 @@ class AuthenticationService(AuthenticatedServiceInterface, Protocol):
         Authentication data must be set beforehand via set_authentication.
         """
 
-    def backchannel_logout(self, encoded_logout_token: str) -> None:
+    def backchannel_logout(self, encoded_logout_token: str) -> str:
         """
         A request to logout and block an active session id. Takes an encoded JWT token containing a
         logout token as a parameter
@@ -51,12 +51,12 @@ class AuthenticationService(AuthenticatedServiceInterface, Protocol):
         Checks if the given user is anonymous or not.
         """
 
-    def block_session_id(self, session_id: int) -> None:
+    def block_session_id(self, session_id: str) -> None:
         """
         Blocks session_id, invalidating their authentication requests
         """
 
-    def is_session_id_blocked(self, session_id: int) -> bool:
+    def is_session_id_blocked(self, session_id: str) -> bool:
         """
         Checks if session_id is blocked and thereby invalid
         """
